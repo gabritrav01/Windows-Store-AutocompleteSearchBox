@@ -10,7 +10,6 @@
         <StackPanel Margin="50"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                     Orientation="Horizontal">
 
             <asb:AutocompleteSearchBox x:Name="SearchBox"

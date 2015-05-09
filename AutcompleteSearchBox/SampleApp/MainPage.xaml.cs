@@ -19,6 +19,8 @@ namespace SampleApp
 
             Persons = GetPersonData();
             SearchBox.ItemsSource = Persons;
+
+            // Define a custom filter used to get results
             SearchBox.Filter = (item, searchText) =>
             {
                 var person = ((Person)item);

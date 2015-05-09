@@ -70,7 +70,6 @@ namespace AutocompleteSearchBox
         private ListBox _resultsListBox;
         private SearchBox _searchBox;
         private Canvas _popupCanvas;
-        private InputPane _inputPane;
 
         #endregion
 
