@@ -66,8 +66,7 @@ namespace SampleApp
             Debug.WriteLine("Selected item:" + SelectedItemTextBlock.Text);
         }
 
-        private void SearchBox_QueryChanged(object sender,
-            SearchBoxQueryChangedEventArgs args)
+        private void SearchBox_QueryChanged(object sender, SearchBoxQueryChangedEventArgs args)
         {
             Debug.WriteLine("QueryText: " + args.QueryText);
         }
