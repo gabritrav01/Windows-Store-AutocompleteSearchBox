@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Search.Core;
@@ -43,7 +45,24 @@ namespace AutocompleteSearchBox
 
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register("ItemsSource", typeof (IEnumerable), typeof (AutocompleteSearchBox),
-                new PropertyMetadata(null));
+                new PropertyMetadata(null, ItemsSourcePropertyChanged));
+
+        private static void ItemsSourcePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var searchBox = (AutocompleteSearchBox) d;
+            var newItemsSource = e.NewValue as INotifyCollectionChanged;
+            var oldItemsSource = e.OldValue as INotifyCollectionChanged;
+
+            if (oldItemsSource != null)
+            {
+                oldItemsSource.CollectionChanged -= searchBox.ItemsSource_CollectionChanged;
+            }
+
+            if (newItemsSource != null)
+            {
+                newItemsSource.CollectionChanged += searchBox.ItemsSource_CollectionChanged;
+            }
+        }
 
         public static readonly DependencyProperty FilterProperty =
             DependencyProperty.Register("Filter", typeof (Func<object, string, bool>), typeof (AutocompleteSearchBox),
@@ -153,7 +172,7 @@ namespace AutocompleteSearchBox
 
         #region Private Methods
 
-        private void SearchBox_QuerySubmitted(SearchBox sender, SearchBoxQuerySubmittedEventArgs args)
+        private void SearchBox_QuerySubmitted(SearchBox sender, SearchBoxQuerySubmittedEventArgs e)
         {
             if (_resultsListBox.Items != null && _resultsListBox.Items.Count > 0)
             {
@@ -162,7 +181,7 @@ namespace AutocompleteSearchBox
             }
         }
 
-        private void ResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs args)
+        private void ResultsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var focusedElement = FocusManager.GetFocusedElement() as ListBoxItem;
             if (focusedElement != null && focusedElement.FocusState == FocusState.Pointer)
@@ -171,12 +190,12 @@ namespace AutocompleteSearchBox
             }
         }
 
-        private void SearchBox_SizeChanged(object sender, SizeChangedEventArgs args)
+        private void SearchBox_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            _resultsListBox.Width = args.NewSize.Width;
+            _resultsListBox.Width = e.NewSize.Width;
         }
 
-        private void SearchBox_LostFocus(object sender, RoutedEventArgs args)
+        private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
         {
             if (CheckListBoxAndItemsFocusState(FocusState.Unfocused))
             {
@@ -184,45 +203,55 @@ namespace AutocompleteSearchBox
             }
         }
 
-        private void ResultsListBox_KeyUp(object sender, KeyRoutedEventArgs args)
+        private void ResultsListBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (args.Key == VirtualKey.Enter && _resultsListBox.SelectedItem != null)
+            if (e.Key == VirtualKey.Enter && _resultsListBox.SelectedItem != null)
             {
                 AnounceSelectedItemAndCloseList();
             }
-            else if (args.Key == VirtualKey.Escape)
+            else if (e.Key == VirtualKey.Escape)
             {
                 CloseResultsAndFocusSearchBox();
             }
         }
 
-        private void SearchBox_KeyUp(object sender, KeyRoutedEventArgs args)
+        private void SearchBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (args.Key == VirtualKey.Down)
+            if (e.Key == VirtualKey.Down)
             {
                 SelectAndOpenResults();
             }
-            else if (args.Key == VirtualKey.Escape)
+            else if (e.Key == VirtualKey.Escape)
             {
                 CloseResultsAndFocusSearchBox();
             }
         }
 
-        private void SearchBox_QueryChanged(object sender, SearchBoxQueryChangedEventArgs args)
+        private void SearchBox_QueryChanged(object sender, SearchBoxQueryChangedEventArgs e)
         {
-            OnQueryChanged(args);
+            OnQueryChanged(e);
 
-            var text = args.QueryText;
+            var text = e.QueryText;
             if (string.IsNullOrEmpty(text))
             {
                 _resultsListBox.Visibility = Visibility.Collapsed;
                 return;
             }
 
+            SetResults(text);
+        }
+
+        private void ItemsSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            SetResults(QueryText);
+        }
+
+        private void SetResults(string queryText)
+        {
             var itemsSource = (ItemsSource ?? Enumerable.Empty<object>()).Cast<object>();
             var filteredItems = from item in itemsSource
-                where Filter(item, text)
-                select item;
+                                where Filter(item, queryText)
+                                select item;
 
             var filteredItemsList = filteredItems.ToList();
             _resultsListBox.ItemsSource = filteredItemsList;
@@ -255,7 +284,7 @@ namespace AutocompleteSearchBox
         {
             var listBoxIsUnfocused = _resultsListBox.FocusState == focusState;
             var allItemsAreUnfocused = _resultsListBox.Items
-                .Select(o => _resultsListBox.ItemContainerGenerator.ContainerFromItem(o))
+                .Select(o => _resultsListBox.ContainerFromItem(o))
                 .Cast<ListBoxItem>()
                 .Where(x => x != null)
                 .All(i => i.FocusState == focusState);
