@@ -11,27 +11,19 @@
                 <ControlTemplate TargetType="asb:AutocompleteSearchBox">
                     <Grid x:Name="LayoutRoot">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
 
                         <SearchBox x:Name="PART_SearchBox"
-                                   Grid.Row="1"
-                                   Grid.Column="1"
+                                   Grid.Row="0"
                                    Margin="{TemplateBinding Padding}"
                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                    QueryText="{TemplateBinding QueryText}" />
 
-                        <Canvas Grid.Row="2"
+                        <Canvas Grid.Row="1"
                                 x:Name="PART_PopupCanvas"
-                                Grid.Column="1"
                                 Width="0"
                                 Height="0"
                                 HorizontalAlignment="Left"
